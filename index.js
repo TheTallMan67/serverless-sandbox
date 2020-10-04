@@ -1,3 +1,18 @@
+/*
+  ROUTES
+
+    check out pretty links pro for "cloaked redirects, javascript redirects, more"
+
+    cloak affiliate links 
+    have differnet cloaked link for each place I am going to use it for tracking
+
+  /images/{imagePath+}
+  /js/{jsResource+}
+  /css/{cssResource+}
+  /{proxy+} //this should be all .html files
+  $default (do 404?)
+
+*/
 'use strict';
 
 const AWS = require('aws-sdk');
@@ -10,6 +25,11 @@ const OBJECTKEY = 'test-file.html';
 exports.handler = async (event, context, callback) => {
   
     console.log('EVENT Info: ' + JSON.stringify(event));
+
+    const requestMethod = event.requestContext.http.method;
+    if ('GET' != requestMethod) {
+      return;
+    }
 
     //1. Read event to get requested resource
     let resource = event.rawPath.replace('/' + event.requestContext.stage, '');
@@ -27,7 +47,18 @@ exports.handler = async (event, context, callback) => {
       //2b. cache these values if it takes too much time
     //3. get partial for requested resource
     //4. build full HTML
+
+    //Need EJS
+    //Make routes to figure out if its an image, js, css or html file so it can setup variables properly
+    //find youtube video of using node with lambda
+    //what is the amazon image processor called?
+    //can i cache things in lambda? like read the template header from dynamo once per deploy?
+      //or cache the supported image widths from dynamo
+      //TODO test read times and see if this is worth it
+      //how would I know the value in teh DB changed? probably shouldn't do this
     
+    //TODO make this typescript
+
     let statusCode = 200;
     let contentType = 'text/html';
     let isBase64Encoded = false;
