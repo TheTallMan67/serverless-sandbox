@@ -35,6 +35,9 @@ const docClient = new AWS.DynamoDB.DocumentClient({region: 'us-east-1'});
 
 exports.handler = async (event, context, callback) => {
 
+  console.log('Handling redirect');
+  console.log('EVENT Info: ' + JSON.stringify(event));
+
   const params = {
     TableName: 'Links',
     Key: {
@@ -45,7 +48,7 @@ exports.handler = async (event, context, callback) => {
   try {
     const start = new Date();
     let data = await docClient.get(params).promise()
-    console.log('data took ' + (new Date().getTime() - start.getTime()) + 'ms = ' + JSON.stringify(data));
+    console.log('get data took ' + (new Date().getTime() - start.getTime()) + 'ms = ' + JSON.stringify(data));
   } catch (e) {
     console.log(e.message)
   }
@@ -55,9 +58,7 @@ exports.handler = async (event, context, callback) => {
     Key: {
       path: "facebook"
     },
-    // UpdateExpression: "remove info.actors[0]",
     UpdateExpression: "set clicks = clicks + :clicksIncrement, lastClickedAt = :now",
-    // UpdateExpression: "set clicks = clicks + :clicksIncrement, lastClickedAt = :now",
     // ConditionExpression: "size(info.actors) > :num",
     ExpressionAttributeValues:{
         ":clicksIncrement": 1
@@ -67,27 +68,30 @@ exports.handler = async (event, context, callback) => {
   }
 
   try {
-    let updated = await docClient.update(updateParams).promise()
-    console.log("UpdateItem succeeded:", JSON.stringify(updated, null, 2));
+    const start = new Date();
+    let updated = await docClient.update(updateParams).promise();
+    console.log('update data took ' + (new Date().getTime() - start.getTime()) + 'ms = ' + JSON.stringify(updated));
+    console.log('need to redirect to: ' + updated.Attributes.target);
   } catch (err) {
     console.error("Unable to update item. Error JSON:", err);
   }
   
-    // console.log('Handling redirect');
-    // console.log('EVENT Info: ' + JSON.stringify(event));
-
-    console.log('done');
-
     // const response = {
     //   statusCode: 301,
     //   headers: {
-    //     'Location': 'https://facebook.com/',
+    //     Location: 'https://google.com',
     //   }
     // };
-    // callback will send HTML back
-    // callback(null, response);
-
-    // context.succeed({ 
-    //     location: "https://[bucket-name].s3-eu-west-1.amazonaws.com/myimage.png" });
-    // });
+  
+    // return callback(null, response);
 };
+
+
+/*
+  CHANGE THE SCHEMA, maybe to below, but figure out schema for other entities as well
+
+  The table name will match the API Gateway Stage (test vs prod)
+  Primary Key :
+    (PK) Partition Key: the old table name (Links)
+    (SK) Sort Key: the old primary key (facebook)
+*/
